@@ -1,0 +1,3 @@
+[submodule "MatchTransit/Assets/ZillaStack/Packages/MinIoC"]
+	path = MatchTransit/Assets/ZillaStack/Packages/MinIoC
+	url = https://github.com/microsoft/MinIoC
