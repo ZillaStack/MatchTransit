@@ -386,6 +386,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f2a25133e21169e44a843c92ec776c4e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ServerIp: 127.0.0.1
+  ServerPort: 5500
+  IsMatchmakerServer: 1
+  IsMatchmakerClient: 0
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

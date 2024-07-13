@@ -1,4 +1,5 @@
-﻿using Microsoft.MinIoC;
+﻿using Assets.ZillaStack.MatchTransit.Matchmaking;
+using Microsoft.MinIoC;
 using System;
 
 namespace Assets.ZillaStack.MatchTransit
@@ -21,7 +22,8 @@ namespace Assets.ZillaStack.MatchTransit
 
             _container = (Container)serviceProvider;
 
-            //_container.Register<IFoo>(typeof(Foo));
+            _container.Register<MatchmakingServer>().AsSingleton();
+            _container.Register<MatchmakingClient>().AsSingleton();
         }
 
         public static T Get<T>() => _container.Resolve<T>();
