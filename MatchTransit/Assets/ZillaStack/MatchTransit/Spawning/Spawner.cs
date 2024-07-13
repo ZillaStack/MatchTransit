@@ -4,13 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Assets.ZillaStack.MatchTransit
+namespace Assets.ZillaStack.MatchTransit.Spawning
 {
-    public class Startup
+    internal class Spawner
     {
-        public void ConfigureServices()
-        {
-
-        }
     }
 }
