@@ -1,5 +1,12 @@
 {
   "dependencies": {
+    "com.revenantx.litenetlib": {
+      "version": "https://github.com/ZillaStack/LiteNetLib.git?path=/LiteNetLib",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "576a8c95175ef1e7fd82a3adbc0a02a183591cbc"
+    },
     "com.unity.collab-proxy": {
       "version": "2.4.3",
       "depth": 0,
