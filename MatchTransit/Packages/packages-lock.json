@@ -168,6 +168,13 @@
       "dependencies": {},
       "hash": "d1ef610e9fe3ad0b490cce91594449fc0af809a6"
     },
+    "com.zillastack.microsoft.minioc": {
+      "version": "https://github.com/ZillaStack/MinIoC.git",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "18521f2621bf47d860af71c6a0143686615bc377"
+    },
     "com.unity.modules.ai": {
       "version": "1.0.0",
       "depth": 0,
