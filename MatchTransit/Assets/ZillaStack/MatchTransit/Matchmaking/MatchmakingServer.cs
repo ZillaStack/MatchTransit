@@ -1,104 +1,130 @@
-﻿using System;
+﻿using UnityEngine;
+using LiteNetLib;
+using LiteNetLib.Utils;
+using System.Collections.Generic;
 using System.Net;
-using System.Net.Sockets;
-using System.Text;
-using System.Threading;
-using UnityEngine;
 
 namespace Assets.ZillaStack.MatchTransit.Matchmaking
 {
-    internal class MatchmakingServer
+    public class MatchmakingServer : MonoBehaviour, INetEventListener
     {
-        private TcpListener server;
-        private Thread serverThread;
-        private bool running;
+        private NetManager _server;
+        private Dictionary<string, Match> _matches = new Dictionary<string, Match>();
 
-        public int port = 5500;
-
-        /// <summary>
-        /// Starts the server, could be called from MonoBehaviour.Start()
-        /// </summary>
-        public void StartServer(int serverPort)
+        void Start()
         {
-            port = serverPort;
-
-            try
-            {
-                server = new TcpListener(IPAddress.Any, port);
-                server.Start();
-                running = true;
-
-                serverThread = new Thread(ServerLoop);
-                serverThread.IsBackground = true;
-                serverThread.Start();
-
-                Debug.Log($"Server started on port {port}");
-            }
-            catch (Exception e)
-            {
-                Debug.LogError($"Server error: {e.Message}");
-            }
+            _server = new NetManager(this);
+            _server.Start(9050);
+            Debug.Log("Server started on port 9050");
         }
 
-        private void ServerLoop()
+        void Update()
         {
-            try
-            {
-                while (running)
-                {
-                    if (server.Pending())
-                    {
-                        TcpClient client = server.AcceptTcpClient();
-                        Debug.Log("Client connected");
-
-                        Thread clientThread = new Thread(() => HandleClient(client));
-                        clientThread.IsBackground = true;
-                        clientThread.Start();
-                    }
-
-                    Thread.Sleep(10); // Reduce CPU usage
-                }
-            }
-            catch (Exception e)
-            {
-                Debug.LogError($"Server loop error: {e.Message}");
-            }
+            _server.PollEvents();
         }
 
-        private void HandleClient(TcpClient client)
+        void OnDestroy()
         {
-            using (NetworkStream stream = client.GetStream())
-            {
-                byte[] buffer = new byte[1024];
-                int bytesRead;
+            _server.Stop();
+        }
 
-                try
-                {
-                    while ((bytesRead = stream.Read(buffer, 0, buffer.Length)) != 0)
-                    {
-                        string message = Encoding.ASCII.GetString(buffer, 0, bytesRead);
-                        Debug.Log($"Received: {message}");
-                    }
-                }
-                catch (Exception e)
-                {
-                    Debug.LogError($"Client handling error: {e.Message}");
-                }
-            }
+        public void OnConnectionRequest(ConnectionRequest request)
+        {
+            request.Accept();
+        }
 
+        public void OnPeerConnected(NetPeer peer)
+        {
+            Debug.Log("Client connected");
+        }
+
+        public void OnPeerDisconnected(NetPeer peer, DisconnectInfo disconnectInfo)
+        {
             Debug.Log("Client disconnected");
-            client.Close();
+            // Remove player from matches
+            foreach (var match in _matches.Values)
+            {
+                match.Players.Remove(peer);
+            }
         }
 
-        /// <summary>
-        /// Stops the server, could be called from MonoBehaviour.OnApplicationQuit()
-        /// </summary>
-        public void StopServer()
+        public void OnNetworkError(IPEndPoint endPoint, System.Net.Sockets.SocketError socketError)
         {
-            running = false;
-            server?.Stop();
-            serverThread?.Join();
-            Debug.Log("Server stopped");
+            Debug.Log("Network error: " + socketError);
+        }
+
+        public void OnNetworkReceive(NetPeer peer, NetPacketReader reader, DeliveryMethod deliveryMethod)
+        {
+            var message = JsonUtility.FromJson<Message>(reader.GetString());
+
+            switch (message.MessageType)
+            {
+                case MessageType.CreateMatch:
+                    CreateMatch(peer, message.GameType);
+                    break;
+                case MessageType.ListMatches:
+                    ListMatches(peer);
+                    break;
+                case MessageType.JoinMatch:
+                    JoinMatch(peer, message.MatchID);
+                    break;
+            }
+        }
+
+        public void OnNetworkLatencyUpdate(NetPeer peer, int latency)
+        {
+        }
+
+        public void OnConnectionLatencyUpdate(NetPeer peer, int latency)
+        {
+        }
+
+        public void OnNetworkReceiveUnconnected(IPEndPoint remoteEndPoint, NetPacketReader reader, UnconnectedMessageType messageType)
+        {
+            Debug.Log("Received unconnected message");
+        }
+
+        public void OnNetworkReceive(NetPeer peer, NetPacketReader reader, byte channelNumber, DeliveryMethod deliveryMethod)
+        {
+            OnNetworkReceive(peer, reader, deliveryMethod);
+        }
+
+        private void CreateMatch(NetPeer peer, string gameType)
+        {
+            var matchID = System.Guid.NewGuid().ToString();
+            var match = new Match(matchID, gameType);
+            match.Players.Add(peer);
+            _matches.Add(matchID, match);
+
+            Debug.Log($"Match created: {matchID} with game type: {gameType}");
+        }
+
+        private void ListMatches(NetPeer peer)
+        {
+            var matchList = new List<MatchInfo>();
+
+            foreach (var match in _matches.Values)
+            {
+                matchList.Add(new MatchInfo { MatchID = match.MatchID, GameType = match.GameType, PlayerCount = match.Players.Count });
+            }
+
+            var matchListMessage = new MatchListMessage { Matches = matchList };
+            var writer = new NetDataWriter();
+            writer.Put(JsonUtility.ToJson(matchListMessage));
+            peer.Send(writer, DeliveryMethod.ReliableOrdered);
+        }
+
+        private void JoinMatch(NetPeer peer, string matchID)
+        {
+            if (_matches.ContainsKey(matchID))
+            {
+                _matches[matchID].Players.Add(peer);
+                Debug.Log($"Player joined match: {matchID}");
+            }
+            else
+            {
+                Debug.Log($"Match not found: {matchID}");
+            }
         }
     }
 }

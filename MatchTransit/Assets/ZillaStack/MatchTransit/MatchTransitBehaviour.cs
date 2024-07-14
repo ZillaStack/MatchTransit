@@ -18,24 +18,24 @@ public class MatchTransitBehaviour : MonoBehaviour
 
         Debug.Log("Starting MatchTransitBehaviour...");
 
-        if (IsMatchmakerServer)
-        {
-            Debug.Log("Starting IsMatchmakerServer...");
-            _matchmakingServer = MatchTransitServices.Get<MatchmakingServer>();
-            _matchmakingServer.StartServer(ServerPort);
-        }
+        //if (IsMatchmakerServer)
+        //{
+        //    Debug.Log("Starting IsMatchmakerServer...");
+        //    _matchmakingServer = MatchTransitServices.Get<MatchmakingServer>();
+        //    _matchmakingServer.StartServer(ServerPort);
+        //}
 
-        if (IsMatchmakerClient)
-        {
-            Debug.Log("Starting IsMatchmakerClient...");
-            _matchmakingClient = MatchTransitServices.Get<MatchmakingClient>();
-            _matchmakingClient.ConnectToServer(ServerIp, ServerPort);
-        }
+        //if (IsMatchmakerClient)
+        //{
+        //    Debug.Log("Starting IsMatchmakerClient...");
+        //    _matchmakingClient = MatchTransitServices.Get<MatchmakingClient>();
+        //    _matchmakingClient.ConnectToServer(ServerIp, ServerPort);
+        //}
     }
 
     void OnApplicationQuit()
     {
-        _matchmakingServer?.StopServer();
-        _matchmakingClient?.Disconnect();
+        //_matchmakingServer?.StopServer();
+        //_matchmakingClient?.Disconnect();
     }
 }
